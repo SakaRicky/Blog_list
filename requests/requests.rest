@@ -1,0 +1,84 @@
+GET http://localhost:3001/api/blogs/
+
+###
+POST http://localhost:3001/api/blogs/ HTTP/1.1
+content-type: application/json
+
+{
+    "title": "How to write node restful api",
+    "author": "Saka Ricky",
+    "url": "www.url.com",
+    "likes": 200,
+    "userId": "6026acbb5743ea35ac349519"
+}
+
+###
+POST http://localhost:3001/api/blogs/ HTTP/1.1
+content-type: application/json
+
+{
+    "title": "Accountancy, an interesting topic",
+    "author": "Rheine Saka",
+    "url": "www.url.com",
+    "likes": 3000,
+    "userId": "6026acbb5743ea35ac349519"
+}
+
+###
+POST http://localhost:3001/api/blogs/ HTTP/1.1
+content-type: application/json
+
+{
+    "title": "Now let me sleep",
+    "author": "Ricky Saka",
+    "url": "www.url.com",
+    "likes": 3000,
+    "userId": "6026acbb5743ea35ac34951a"
+}
+
+###
+PUT http://localhost:3001/api/blogs/6017359d0ac2c133f85c3330 HTTP/1.1
+content-type: application/json
+
+{
+    "likes": 12345
+}
+
+###
+POST http://localhost:3001/api/blogs/ HTTP/1.1
+content-type: application/json
+
+{
+    "title": "This one will be deleted",
+    "author": "Ricky Saka",
+    "url": "www.url.com",
+    "likes": 3,
+    "userId": "6026acbb5743ea35ac349519"
+}
+
+###
+DELETE http://localhost:3001/api/blogs/601c8bdd6bf0b83260232721 HTTP/1.1
+
+###
+POST http://localhost:3001/api/blogs/ HTTP/1.1
+content-type: application/json
+
+{
+    "title": "A note with a user who created it",
+    "author": "Ricky Saka",
+    "url": "www.url.com",
+    "likes": 3,
+    "userId": "6026acbb5743ea35ac34951a"
+}
+
+###
+POST http://localhost:3001/api/blogs/ HTTP/1.1
+content-type: application/json
+authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJpY2t5c2FrYTkxIiwiaWQiOiI2MDI2YWNiYjU3NDNlYTM1YWMzNDk1MWEiLCJpYXQiOjE2MTMyNTU5MTJ9.PI1gTSREVMSUs_gDA5A6T8RZpLKespSXIlnRxaveSqE
+
+{
+    "title": "A note with a user who created it and a token",
+    "author": "Ricky Saka",
+    "url": "www.url.com",
+    "likes": 3
+}
