@@ -82,3 +82,7 @@ authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJpY
     "url": "www.url.com",
     "likes": 3
 }
+
+###
+DELETE http://localhost:3001/api/blogs/602fc6a772b1791a5c4da3ab HTTP/1.1 
+authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJpY2t5c2FrYTkxIiwiaWQiOiI2MDI2YWNiYjU3NDNlYTM1YWMzNDk1MWEiLCJpYXQiOjE2MTMyNTU5MTJ9.PI1gTSREVMSUs_gDA5A6T8RZpLKespSXIlnRxaveSqE

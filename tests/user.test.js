@@ -4,6 +4,8 @@ const api = supertest(app)
 const User = require('../models/user')
 const config = require('../utils/config')
 const mongoose = require('mongoose')
+const bcrypt = require('bcrypt')
+
 
 beforeAll(async () => {
     await mongoose.connect(config.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false, useCreateIndex: true });
@@ -24,9 +26,26 @@ const initialUsers = [
 
 beforeEach(async () => {
     await User.deleteMany({})
-    let userObject = new User(initialUsers[0])
+
+    const saltRounds = 10
+    let passwordHash = await bcrypt.hash(initialUsers[0].password, saltRounds)
+
+    let userObject = new User({
+        username: initialUsers[0].username,
+        name: initialUsers[0].name,
+        password: passwordHash
+    })
+
     await userObject.save()
-    userObject = new User(initialUsers[1])
+
+    passwordHash = await bcrypt.hash(initialUsers[1].password, saltRounds)
+
+    userObject = new User({
+        username: initialUsers[1].username,
+        name: initialUsers[1].name,
+        password: passwordHash
+    })
+    
     await userObject.save()
 })
 

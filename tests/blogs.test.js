@@ -3,10 +3,14 @@ const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
 const Blog = require('../models/blog')
+const mongoose = require('mongoose')
+const config = require('../utils/config')
 
 beforeAll(async () => {
     await mongoose.connect(config.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: false, useFindAndModify: false, useCreateIndex: true });
   });
+
+//   const token = "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJpY2t5c2FrYTkxIiwiaWQiOiI2MDI2YWNiYjU3NDNlYTM1YWMzNDk1MWEiLCJpYXQiOjE2MTMyNTU5MTJ9.PI1gTSREVMSUs_gDA5A6T8RZpLKespSXIlnRxaveSqE"
 
 const initialBlogs = [
     {
@@ -14,14 +18,18 @@ const initialBlogs = [
         author: "Saka Ricky",
         url: "www.url.com",
         likes: 200,
+        user: "602fd4a0ea84df0d401263a1"
     },
     {
         title: "Accountancy, an interesting topic",
         author: "Rheine Saka",
         url: "www.url.com",
         likes: 3000,
+        user: "602fd4a0ea84df0d401263a1"
     }
 ]
+
+let token = null
 
 beforeEach(async () => {
     await Blog.deleteMany({})
@@ -29,11 +37,29 @@ beforeEach(async () => {
     await blogObject.save()
     blogObject = new Blog(initialBlogs[1])
     await blogObject.save()
+
+    const login = await api.post('/api/login')
+             .send({
+                "username": "rickysaka91",
+                "password": "jw76102907"
+            })
+    
+    // Since the login returns a text, I convert it to a JSON object
+    // and extract the found as the 1st parameter 
+    token = JSON.parse(login.res.text).token
 })
 
 // Using supertest
+test('fails with status code 401 if no token is given', async () => {
+    await api.get('/api/blogs')
+             .expect(401)
+
+})
+
+
 test('return blogs should be json', async () => {
     await api.get('/api/blogs')
+             .set("authorization", `bearer ${token}`)
              .expect(200)
              .expect('Content-type', /application\/json/)
 
@@ -41,12 +67,15 @@ test('return blogs should be json', async () => {
 
 
 test('make a get request to /api/blogs url', async () => {
-    const response_blogs = await api.get('/api/blogs')
+    const response_blogs = await api.get('/api/blogs')             
+                                    .set("authorization", `bearer ${token}`)
+
     expect(response_blogs.body).toHaveLength(initialBlogs.length)
 })
 
 test('a specific note is among the returned notes', async () => {
     const response_blogs = await api.get('/api/blogs')
+                                    .set("authorization", `bearer ${token}`)
 
     const titles = response_blogs.body.map(blog => blog.title)
     expect(titles).toContain("How to write node restful api")
@@ -54,55 +83,77 @@ test('a specific note is among the returned notes', async () => {
 
 test('id should be defined for any post', async () => {
     const response = await api.get('/api/blogs')
+                              .set("authorization", `bearer ${token}`)
 
     response.body.map(blog => expect(blog.id).toBeDefined())
 })
 
 test('should save a post successfully', async () => {
     const saved_blog = await api.post('/api/blogs')
-             .send({
-                    title: "Side projects help consolidate programming knowledge",
-                    author: "Ricky Saka",
-                    url: "www.url.com",
-                    likes: 9850,
-                })
+                                .set("authorization", `bearer ${token}`)
+                                .send({
+                                        title: "Side projects help consolidate programming knowledge",
+                                        author: "Ricky Saka",
+                                        url: "www.url.com",
+                                        likes: 9850,
+                                    })
+    
     all_blogs = await api.get('/api/blogs')
+                         .set("authorization", `bearer ${token}`)
+    console.log(all_blogs.body);
     const titles = all_blogs.body.map(blog => blog.title)
     expect(titles).toContain("Side projects help consolidate programming knowledge")
-
 })
 
 test('should return 0 if like property is missing', async () => {
     const saved_blog = await api.post('/api/blogs')
-             .send({
-                    title: "Post without likes property",
-                    author: "Ricky Saka",
-                    url: "www.url.com",
-                })
+                                .set("authorization", `bearer ${token}`)
+                                .send({
+                                        title: "Post without likes property",
+                                        author: "Ricky Saka",
+                                        url: "www.url.com",
+                                    })
     expect(saved_blog.body.likes).toBe(0)
 })
 
 test('should return status 400 if missing title and url', async () => {
     const saved_blog = await api.post('/api/blogs')
-             .send({ url: "www.url.com" })
+                                .set("authorization", `bearer ${token}`)
+                                .send({ url: "www.url.com" })
     expect(saved_blog.status).toBe(400)
 })
 
 test('should delete a note from the database', async () => {
     const saved_blogs = await api.get('/api/blogs')
+                                 .set("authorization", `bearer ${token}`)
+
     const first_blog = saved_blogs.body[0]
 
-    const result = await api.delete(`/api/blogs/${first_blog.id}`)
+    const response = await api.delete(`/api/blogs/${first_blog.id}`)
+                            .set("authorization", `bearer ${token}`)
 
-   expect(first_blog.title).toBe(result.body.title)
+
+    const deleted_blog = JSON.parse(response.res.text);
+    
+    const remainingBlogsResponse = await api.get('/api/blogs')
+                                    .set("authorization", `bearer ${token}`)
+    
+    const remainingBlogs = JSON.parse(remainingBlogsResponse.res.text)
+                                    console.log('remainingBlogs: ', remainingBlogs);
+    const remaining_titles = remainingBlogs.map(blog => blog.title)
+    expect(first_blog.title).not.toContain(remaining_titles)
 
 })
 
 test('should update a note from the database', async () => {
     const saved_blogs = await api.get('/api/blogs')
+                                 .set("authorization", `bearer ${token}`)
+                                 
     const first_blog = saved_blogs.body[0]
 
-    const result = await api.put(`/api/blogs/${first_blog.id}`).send({likes: 12345})
+    const result = await api.put(`/api/blogs/${first_blog.id}`)
+                            .set("authorization", `bearer ${token}`)
+                            .send({likes: 12345})
 
    expect(first_blog.likes).not.toBe(result.body.likes)
 
